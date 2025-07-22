@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using System.Diagnostics;
 
 namespace StampedeProblem.Stores;
 
@@ -20,13 +21,13 @@ public class CachedResourceStore : SimpleResourceStore, IDisposable
     /// Gets 20 random resources from cache or loads them if not cached, with 10-minute expiration.
     /// </summary>
     /// <returns>A collection of cached or freshly loaded random resources.</returns>
-    public override async Task<List<ResourceExample>> GetRandomResourcesAsync()
+    public override async Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)> GetRandomResourcesAsync()
     {
         var threadId = Thread.CurrentThread.ManagedThreadId;
+        Stopwatch stopwatch = Stopwatch.StartNew();
         if (!_cache.TryGetValue(CACE_KEY, out List<ResourceExample>? cachedResources) || cachedResources == null)
         {
             var cacheMissMessage = $"Thread {threadId}: Cache MISS - Loading resources from store";
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cacheMissMessage}");
             _logger?.Log(cacheMissMessage, LogLevelInternal.Information, "CachedResourceStore", true);
 
             var resources = await base.GetRandomResourcesAsync();
@@ -36,20 +37,18 @@ public class CachedResourceStore : SimpleResourceStore, IDisposable
                 Priority = CacheItemPriority.Normal
             };
 
-            _cache.Set(CACE_KEY, resources, cacheOptions);
+            _cache.Set(CACE_KEY, resources.result, cacheOptions);
 
-            cachedResources = resources;
+            cachedResources = resources.result;
             var cachedMessage = $"Thread {threadId}: Resources cached for {_cacheExpiration.TotalMinutes} minutes";
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cachedMessage}");
             _logger?.Log(cachedMessage, LogLevelInternal.Information, "CachedResourceStore");
         }
 
         var cacheHitMessage = $"Thread {threadId}: Cache HIT - Returning cached resources";
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cacheHitMessage}");
         _logger?.Log(cacheHitMessage, LogLevelInternal.Information, "CachedResourceStore");
 
         cachedResources.ForEach(p => _logger?.Log(p.ToString(), LogLevelInternal.Debug, nameof(CachedResourceStore)));
-        return cachedResources;
+        return (cachedResources, stopwatch.ElapsedMilliseconds, stopwatch.ElapsedTicks);
     }
 
     /// <summary>

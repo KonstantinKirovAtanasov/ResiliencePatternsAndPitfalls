@@ -35,78 +35,119 @@
                                      Min="1" Max="10"
                                      Variant="Variant.Outlined" />
 
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Success"
-                               Style="color:#1e1e1e"
-                               StartIcon="@(Icons.Material.Filled.PlayArrow)"
-                               FullWidth="true"
-                               Disabled="@isRunning"
-                               OnClick="RunNormalStampede">
-                        Run Normal
-                    </MudButton>
+                    @if (!isRunning)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Success"
+                                   Style="color:#1e1e1e"
+                                   StartIcon="@(Icons.Material.Filled.PlayArrow)"
+                                   FullWidth="true"
+                                   Disabled="@isRunning"
+                                   OnClick="RunNormalStampede">
+                            Run Normal
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Pulse" Height="36px" Class="ml-2 mr-2" SkeletonType="SkeletonType.Rectangle" />
+                    }
 
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Warning"
-                               Style="color:#1e1e1e"
-                               StartIcon="@(Icons.Material.Filled.Warning)"
-                               FullWidth="true"
-                               Disabled="@isRunning"
-                               OnClick="RunDeadlockStampede">
-                        Run Deadlock-Prone
-                    </MudButton>
+                    @if (!isRunning)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Warning"
+                                   Style="color:#1e1e1e"
+                                   StartIcon="@(Icons.Material.Filled.Warning)"
+                                   FullWidth="true"
+                                   Disabled="@isRunning"
+                                   OnClick="RunDeadlockStampede">
+                            Run Deadlock-Prone
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Pulse" Height="36px" Class="ml-2 mr-2" SkeletonType="SkeletonType.Rectangle" />
+                    }
 
-                    <MudButton Variant="Variant.Filled"
-                               Style="background-color: deepskyblue; color:#1e1e1e"
-                               StartIcon="@(Icons.Material.Filled.Cached)"
-                               FullWidth="true"
-                               Disabled="@isRunning"
-                               OnClick="RunCachedStampede">
-                        Run Cached (non-thread safe)
-                    </MudButton>
+                    @if (!isRunning)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Style="background-color: deepskyblue; color:#1e1e1e"
+                                   StartIcon="@(Icons.Material.Filled.Cached)"
+                                   FullWidth="true"
+                                   Disabled="@isRunning"
+                                   OnClick="RunCachedStampede">
+                            Run Cached (non-thread safe)
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Pulse" Height="36px" Class="ml-2 mr-2" SkeletonType="SkeletonType.Rectangle" />
+                    }
 
-                    <MudButton Variant="Variant.Filled"
-                               Style="background-color: dodgerblue; color:#1e1e1e"
-                               StartIcon="@(Icons.Material.Filled.Cached)"
-                               FullWidth="true"
-                               Disabled="@isRunning"
-                               OnClick="RunThreadSafeCachedStampede">
-                        Run Cached (thread safe)
-                    </MudButton>
+                    @if (!isRunning)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Style="background-color: dodgerblue; color:#1e1e1e"
+                                   StartIcon="@(Icons.Material.Filled.Cached)"
+                                   FullWidth="true"
+                                   Disabled="@isRunning"
+                                   OnClick="RunThreadSafeCachedStampede">
+                            Run Cached (thread safe)
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Pulse" Height="36px" Class="ml-2 mr-2" SkeletonType="SkeletonType.Rectangle" />
+                    }
 
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Info"
-                               StartIcon="@(Icons.Material.Filled.Refresh)"
-                               FullWidth="true"
-                               Disabled="@isRunning"
-                               OnClick="ClearResourceCache">
-                        Clear Cache (non-thread safe)
-                    </MudButton>
+                    @if (!isRunning)
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Info"
+                                   StartIcon="@(Icons.Material.Filled.Refresh)"
+                                   FullWidth="true"
+                                   Disabled="@isRunning"
+                                   OnClick="ClearResourceCache">
+                            Clear Cache (non-thread safe)
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Pulse" Height="36px" Class="ml-2 mr-2" SkeletonType="SkeletonType.Rectangle" />
+                    }
 
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Info"
-                               StartIcon="@(Icons.Material.Filled.Refresh)"
-                               FullWidth="true"
-                               Disabled="@isRunning"
-                               OnClick="ClearThreadSafeResourceCache">
-                        Clear Cache (thread safe)
-                    </MudButton>
+                    @if (!isRunning)
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Info"
+                                   StartIcon="@(Icons.Material.Filled.Refresh)"
+                                   FullWidth="true"
+                                   Disabled="@isRunning"
+                                   OnClick="ClearThreadSafeResourceCache">
+                            Clear Cache (thread safe)
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Pulse" Height="36px" Class="ml-2 mr-2" SkeletonType="SkeletonType.Rectangle" />
+                    }
 
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Default"
-                               StartIcon="@(Icons.Material.Filled.Clear)"
-                               FullWidth="true"
-                               OnClick="ClearLogs">
-                        Clear Logs
-                    </MudButton>
+                    @if (!isRunning)
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   StartIcon="@(Icons.Material.Filled.Clear)"
+                                   FullWidth="true"
+                                   OnClick="ClearLogs">
+                            Clear Logs
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudSkeleton Animation="Animation.Pulse" Height="36px" Class="ml-2 mr-2" SkeletonType="SkeletonType.Rectangle" />
+                    }
                 </MudStack>
-
-                @if (isRunning)
-                {
-                    <MudStack AlignItems="AlignItems.Center" Class="mt-4">
-                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-                        <MudText Typo="Typo.body2">Tasks are running...</MudText>
-                    </MudStack>
-                }
             </MudPaper>
 
             <!-- Results Summary -->
@@ -126,9 +167,11 @@
                         <strong>Failed:</strong>
                         <MudText Typo="Typo.body2" Color="Color.Error" Style="display: inline">@failedTasks</MudText>
                     </MudText>
-                    <MudText Typo="Typo.body2">
-                        <strong>Duration:</strong> @averageDuration ms
-                    </MudText>
+                    <MudStack Row="true">
+                        <MudText Typo="Typo.body2">
+                            <strong>Average Duration:</strong> @averageDuration ms. / @averageDurationTicks ticks.
+                        </MudText>
+                    </MudStack>
                     <MudDivider Class="my-2" />
                     <MudText Typo="Typo.body2">
                         <strong>Cache Status:</strong>
@@ -215,7 +258,8 @@
     private int totalTasksRun = 0;
     private int successfulTasks = 0;
     private int failedTasks = 0;
-    private string averageDuration = "0";
+    private string averageDuration = "-";
+    private string averageDurationTicks = "-";
 
     protected override void OnInitialized() => LogService.LogEntryAdded += OnLogEntryAdded;
 
@@ -232,32 +276,22 @@
         isRunning = true;
         LogService.Log($"🚀 Starting Normal Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Information, "Demo Controller");
 
-        var tasks = new List<Task>();
-        var startTime = DateTime.Now;
-
-        for (int i = 0; i < concurrentTasks; i++)
-        {
-            tasks.Add(Task.Run(async () =>
+        List<Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)>> tasks = new();
+        Enumerable.Range(0, concurrentTasks).ToList().ForEach(
+            i =>
             {
-                try
+                tasks.Add(StampedeService.GetResourcesNormalAsync().ContinueWith(p =>
                 {
-                    await StampedeService.GetResourcesNormalAsync();
-                    Interlocked.Increment(ref successfulTasks);
-                }
-                catch
-                {
-                    Interlocked.Increment(ref failedTasks);
-                }
-                finally
-                {
-                    Interlocked.Increment(ref totalTasksRun);
-                }
-            }));
-        }
+                    if (p.IsFaulted) Interlocked.Increment(ref failedTasks);
+                    else Interlocked.Increment(ref successfulTasks);
+                    return p.Result;
+                }));
+            });
 
         await Task.WhenAll(tasks);
-        var duration = (DateTime.Now - startTime).TotalMilliseconds;
+        var duration = tasks.Sum(p => p.Result.elapsedMilliseconds) / concurrentTasks;
         averageDuration = $"{duration:F0}";
+        averageDurationTicks = $"{tasks.Sum(p => p.Result.elapsedTicks) / concurrentTasks}";
 
         LogService.Log($"✅ Normal Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
         isRunning = false;
@@ -267,71 +301,49 @@
     {
         isRunning = true;
         LogService.Log($"🚀 Starting Cached Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Information, "Demo Controller");
-
-        var tasks = new List<Task>();
-        var startTime = DateTime.Now;
-
-        for (int i = 0; i < concurrentTasks; i++)
-        {
-            tasks.Add(Task.Run(async () =>
+        List<Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)>> tasks = new();
+        Enumerable.Range(0, concurrentTasks).ToList().ForEach(
+            i =>
             {
-                try
+                tasks.Add(StampedeService.GetResourcesCachedAsync().ContinueWith(p =>
                 {
-                    await StampedeService.GetResourcesCachedAsync();
-                    Interlocked.Increment(ref successfulTasks);
-                }
-                catch
-                {
-                    Interlocked.Increment(ref failedTasks);
-                }
-                finally
-                {
-                    Interlocked.Increment(ref totalTasksRun);
-                }
-            }));
-        }
+                    if (p.IsFaulted) Interlocked.Increment(ref failedTasks);
+                    else Interlocked.Increment(ref successfulTasks);
+                    return p.Result;
+                }));
+            });
 
         await Task.WhenAll(tasks);
-        var duration = (DateTime.Now - startTime).TotalMilliseconds;
+        var duration = tasks.Sum(p => p.Result.elapsedMilliseconds) / concurrentTasks;
         averageDuration = $"{duration:F0}";
+        averageDurationTicks = $"{tasks.Sum(p => p.Result.elapsedTicks) / concurrentTasks}";
 
         LogService.Log($"✅ Cached Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
         isRunning = false;
         isCacheActive = true;
     }
 
-
     private async Task RunThreadSafeCachedStampede()
     {
         isRunning = true;
         LogService.Log($"🚀 Starting Cached Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Information, "Demo Controller");
 
-        var tasks = new List<Task>();
-        var startTime = DateTime.Now;
-
-        for (int i = 0; i < concurrentTasks; i++)
-        {
-            tasks.Add(Task.Run(async () =>
+        List<Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)>> tasks = new();
+        Enumerable.Range(0, concurrentTasks).ToList().ForEach(
+            i =>
             {
-                try
+                tasks.Add(StampedeService.GetThreadSafeResourcesCachedAsync().ContinueWith(p =>
                 {
-                    await StampedeService.GetThreadSafeResourcesCachedAsync();
-                    Interlocked.Increment(ref successfulTasks);
-                }
-                catch
-                {
-                    Interlocked.Increment(ref failedTasks);
-                }
-                finally
-                {
-                    Interlocked.Increment(ref totalTasksRun);
-                }
-            }));
-        }
+                    if (p.IsFaulted) Interlocked.Increment(ref failedTasks);
+                    else Interlocked.Increment(ref successfulTasks);
+                    return p.Result;
+                }));
+            });
 
         await Task.WhenAll(tasks);
-        var duration = (DateTime.Now - startTime).TotalMilliseconds;
+        var duration = tasks.Sum(p => p.Result.elapsedMilliseconds) / concurrentTasks;
         averageDuration = $"{duration:F0}";
+        averageDurationTicks = $"{tasks.Sum(p => p.Result.elapsedTicks) / concurrentTasks}";
 
         LogService.Log($"✅ Cached Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
         isRunning = false;
@@ -356,35 +368,24 @@
     {
         isRunning = true;
         LogService.Log($"⚠️ Starting Deadlock-Prone Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Warning, "Demo Controller");
-
-        var tasks = new List<Task>();
-        var startTime = DateTime.Now;
-
-        for (int i = 0; i < concurrentTasks; i++)
-        {
-            tasks.Add(Task.Run(async () =>
+        List<Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)>> tasks = new();
+        Enumerable.Range(0, concurrentTasks).ToList().ForEach(
+            i =>
             {
-                try
+                tasks.Add(StampedeService.GetResourcesWithDeadlockRiskAsync().ContinueWith(p =>
                 {
-                    await StampedeService.GetResourcesWithDeadlockRiskAsync();
-                    Interlocked.Increment(ref successfulTasks);
-                }
-                catch
-                {
-                    Interlocked.Increment(ref failedTasks);
-                }
-                finally
-                {
-                    Interlocked.Increment(ref totalTasksRun);
-                }
-            }));
-        }
+                    if (p.IsFaulted) Interlocked.Increment(ref failedTasks);
+                    else Interlocked.Increment(ref successfulTasks);
+                    return p.Result;
+                }));
+            });
 
         try
         {
-            await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(30));
-            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            await Task.WhenAll(tasks);
+            var duration = tasks.Sum(p => p.Result.elapsedMilliseconds) / concurrentTasks;
             averageDuration = $"{duration:F0}";
+            averageDurationTicks = $"{tasks.Sum(p => p.Result.elapsedTicks) / concurrentTasks}";
             LogService.Log($"✅ Deadlock-Prone Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
         }
         catch (TimeoutException)
@@ -402,7 +403,8 @@
         totalTasksRun = 0;
         successfulTasks = 0;
         failedTasks = 0;
-        averageDuration = "0";
+        averageDuration = "-";
+        averageDurationTicks = "-";
         LogService.Clear();
     }
 

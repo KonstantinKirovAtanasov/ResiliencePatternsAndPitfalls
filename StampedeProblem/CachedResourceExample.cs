@@ -22,19 +22,17 @@ public class CachedResourceExample
         // Simulate stampede scenario with multiple concurrent requests
         Console.WriteLine("🚀 Simulating stampede with 5 concurrent requests...\n");
 
-        var tasks = new List<Task<List<ResourceExample>>>();
-        var startTime = DateTime.Now;
+        List<Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)>> tasks = new ();
+        DateTime startTime = DateTime.Now;
 
         // Create 5 concurrent requests
         for (int i = 0; i < 5; i++)
         {
-            var taskId = i + 1;
-            tasks.Add(Task.Run(async () =>
+            int taskId = i + 1;
+            tasks.Add(cachedStore.GetRandomResourcesAsync().ContinueWith(p =>
             {
-                Console.WriteLine($"[Task {taskId}] Starting request...");
-                var result = await cachedStore.GetRandomResourcesAsync();
-                Console.WriteLine($"[Task {taskId}] Completed with {result.Count} resources");
-                return result;
+                Console.WriteLine($"[Task {taskId}] Completed with {p.Result.result.Count} resources");
+                return p.Result;
             }));
         }
 
@@ -43,7 +41,7 @@ public class CachedResourceExample
         var totalDuration = (DateTime.Now - startTime).TotalMilliseconds;
 
         Console.WriteLine($"\n✅ All tasks completed in {totalDuration:F0}ms");
-        Console.WriteLine($"📊 Results: {results.Length} tasks, each got {results[0].Count} resources");
+        Console.WriteLine($"📊 Results: {results.Length} tasks, each got {results[0].result.Count} resources");
 
         // Demonstrate cache hit by making another request
         Console.WriteLine("\n🔄 Making another request (should hit cache)...");

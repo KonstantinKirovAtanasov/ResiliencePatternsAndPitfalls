@@ -26,14 +26,14 @@ public class StampedeService : IDisposable
     /// <summary>
     /// Demonstrates normal resource fetching without deadlock issues.
     /// </summary>
-    public async Task<List<ResourceExample>> GetResourcesNormalAsync()
+    public async Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)> GetResourcesNormalAsync()
     {
         _logger.Log("Starting normal resource fetch...", LogLevelInternal.Information, "Normal Store");
 
         try
         {
             var resources = await _simpleStore.GetRandomResourcesAsync();
-            _logger.Log($"Successfully fetched {resources.Count} resources normally", LogLevelInternal.Information, "Normal Store");
+            _logger.Log($"Successfully fetched {resources.result.Count} resources normally", LogLevelInternal.Information, "Normal Store");
             return resources;
         }
         catch (Exception ex)
@@ -46,14 +46,14 @@ public class StampedeService : IDisposable
     /// <summary>
     /// Demonstrates resource fetching with deadlock vulnerability.
     /// </summary>
-    public async Task<List<ResourceExample>> GetResourcesWithDeadlockRiskAsync()
+    public async Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)> GetResourcesWithDeadlockRiskAsync()
     {
         _logger.Log("Starting deadlock-prone resource fetch...", LogLevelInternal.Warning, "Deadlock Store");
 
         try
         {
             var resources = await _deadlockStore.GetRandomResourcesAsync();
-            _logger.Log($"Successfully fetched {resources.Count} resources (avoided deadlock)", LogLevelInternal.Information, "Deadlock Store");
+            _logger.Log($"Successfully fetched {resources.result.Count} resources (avoided deadlock)", LogLevelInternal.Information, "Deadlock Store");
             return resources;
         }
         catch (Exception ex)
@@ -64,55 +64,16 @@ public class StampedeService : IDisposable
     }
 
     /// <summary>
-    /// Demonstrates stampede scenario by running multiple concurrent requests.
-    /// </summary>
-    public async Task<List<List<ResourceExample>>> SimulateStampedeAsync(int numberOfTasks = 5, bool useDeadlockProne = false)
-    {
-        var storeName = useDeadlockProne ? "Deadlock Store" : "Normal Store";
-        _logger.Log($"🚀 Starting stampede simulation with {numberOfTasks} concurrent tasks using {storeName}!", LogLevelInternal.Information, "Stampede Simulator");
-
-        var tasks = new List<Task<List<ResourceExample>>>();
-
-        for (int i = 0; i < numberOfTasks; i++)
-        {
-            var taskNumber = i + 1;
-            _logger.Log($"Creating task {taskNumber}/{numberOfTasks}", LogLevelInternal.Debug, "Stampede Simulator");
-
-            if (useDeadlockProne)
-            {
-                tasks.Add(GetResourcesWithDeadlockRiskAsync());
-            }
-            else
-            {
-                tasks.Add(GetResourcesNormalAsync());
-            }
-        }
-
-        try
-        {
-            _logger.Log($"Waiting for all {numberOfTasks} tasks to complete...", LogLevelInternal.Information, "Stampede Simulator");
-            var results = await Task.WhenAll(tasks);
-            _logger.Log($"✅ Stampede simulation completed! All {numberOfTasks} tasks finished successfully.", LogLevelInternal.Information, "Stampede Simulator");
-            return results.ToList();
-        }
-        catch (Exception ex)
-        {
-            _logger.Log($"💥 Stampede simulation failed: {ex.Message}", LogLevelInternal.Error, "Stampede Simulator");
-            throw;
-        }
-    }
-
-    /// <summary>
     /// Demonstrates resource fetching with caching.
     /// </summary>
-    public async Task<List<ResourceExample>> GetResourcesCachedAsync()
+    public async Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)> GetResourcesCachedAsync()
     {
         _logger.Log("Starting cached resource fetch...", LogLevelInternal.Information, "Cached Store");
 
         try
         {
             var resources = await _cachedStore.GetRandomResourcesAsync();
-            _logger.Log($"Successfully fetched {resources.Count} resources from cache", LogLevelInternal.Information, "Cached Store");
+            _logger.Log($"Successfully fetched {resources.result.Count} resources from cache", LogLevelInternal.Information, "Cached Store");
             return resources;
         }
         catch (Exception ex)
@@ -125,14 +86,14 @@ public class StampedeService : IDisposable
     /// <summary>
     /// Demonstrates resource fetching with tread safe caching to prevent stampede problems.
     /// </summary>
-    public async Task<List<ResourceExample>> GetThreadSafeResourcesCachedAsync()
+    public async Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)> GetThreadSafeResourcesCachedAsync()
     {
         _logger.Log("Starting thread safe cached resource fetch...", LogLevelInternal.Information, "Thread Safe Cached Store");
 
         try
         {
             var resources = await _threadSafeCachedStore.GetRandomResourcesAsync();
-            _logger.Log($"Successfully fetched {resources.Count} resources from cache", LogLevelInternal.Information, "Thread Safe Cached Store");
+            _logger.Log($"Successfully fetched {resources.result.Count} resources from cache", LogLevelInternal.Information, "Thread Safe Cached Store");
             return resources;
         }
         catch (Exception ex)
@@ -159,27 +120,10 @@ public class StampedeService : IDisposable
         _threadSafeCachedStore.ClearCache();
         _logger.Log("Thread Safe Cache manually cleared", LogLevelInternal.Information, "Cache Manager");
     }
-
+    
     /// <summary>
-    /// Gets simple resources without delay for comparison.
+    /// Disposes the service and its resources, including cached stores.
     /// </summary>
-    public List<ResourceExample> GetResourcesSimple()
-    {
-        _logger.Log("Getting resources with simple/fast method", LogLevelInternal.Information, "Simple Method");
-
-        try
-        {
-            var resources = _simpleStore.GetRandomResourcesAsync().Result;
-            _logger.Log($"Got {resources.Count} resources instantly", LogLevelInternal.Information, "Simple Method");
-            return resources;
-        }
-        catch (Exception ex)
-        {
-            _logger.Log($"Error in simple fetch: {ex.Message}", LogLevelInternal.Error, "Simple Method");
-            throw;
-        }
-    }
-
     public void Dispose()
     {
         _cachedStore.Dispose();

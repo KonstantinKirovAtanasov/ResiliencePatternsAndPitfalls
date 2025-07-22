@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace StampedeProblem.Stores;
 
@@ -15,12 +15,12 @@ public class SimpleResourceStore(int delayMs = 200, IRealTimeLogService? logger 
     /// Gets 20 random resources with simulated delay.
     /// </summary>
     /// <returns>A collection of 20 random resources.</returns>
-    public virtual async Task<List<ResourceExample>> GetRandomResourcesAsync()
+    public virtual async Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)> GetRandomResourcesAsync()
     {
         var threadId = Thread.CurrentThread.ManagedThreadId;
         var message = $"Thread {threadId}: Starting to fetch 20 random resources...";
 
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+        Stopwatch stopwatch = Stopwatch.StartNew();
         _logger?.Log(message, LogLevelInternal.Information, "SimpleResourceStore");
         var resources = new List<ResourceExample>();
 
@@ -32,10 +32,9 @@ public class SimpleResourceStore(int delayMs = 200, IRealTimeLogService? logger 
         }
 
         var completedMessage = $"Thread {threadId}: Completed fetching 20 resources after {_delayMs}ms";
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {completedMessage}");
         _logger?.Log(completedMessage, LogLevelInternal.Information, "SimpleResourceStore");
         resources.ForEach(p => _logger?.Log(p?.ToString() ?? "", LogLevelInternal.Debug, nameof(SimpleResourceStore)));
 
-        return resources;
+        return (resources, stopwatch.ElapsedMilliseconds, stopwatch.ElapsedTicks);
     }
 }

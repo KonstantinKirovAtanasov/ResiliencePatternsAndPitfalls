@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 
 namespace StampedeProblem.Stores;
@@ -22,10 +23,11 @@ public class ThreadSafeCachedResourceStore : SimpleResourceStore, IDisposable
     /// Gets 20 random resources from cache or loads them if not cached, with 10-minute expiration.
     /// </summary>
     /// <returns>A collection of cached or freshly loaded random resources.</returns>
-    public override async Task<List<ResourceExample>> GetRandomResourcesAsync()
+    public override async Task<(List<ResourceExample> result, long elapsedMilliseconds, long elapsedTicks)> GetRandomResourcesAsync()
     {
         var threadId = Thread.CurrentThread.ManagedThreadId;
 
+        Stopwatch stopwatch = Stopwatch.StartNew();
         if (!_cache.TryGetValue(CACE_KEY, out List<ResourceExample>? cachedResources) || cachedResources == null)
         {
             // Най-важната разлика
@@ -33,19 +35,16 @@ public class ThreadSafeCachedResourceStore : SimpleResourceStore, IDisposable
             {
                 SemaphoreSlim semaphore = _semaphoreDictionary.GetOrAdd(CACE_KEY, _ => new(1, 1));
                 var cacheMissMessage = $"Thread {threadId}: Cache MISS check waiting to release.";
-                Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cacheMissMessage}");
                 _logger?.Log(cacheMissMessage, LogLevelInternal.Information, "ThreadSafeCachedResourceStore");
                 await semaphore.WaitAsync();
                 if (_cache.TryGetValue(CACE_KEY, out var existingValue))
                 {
                     cacheMissMessage = $"Thread {threadId}: Store data already loaded and populated.";
-                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cacheMissMessage}");
                     _logger?.Log(cacheMissMessage, LogLevelInternal.Information, "ThreadSafeCachedResourceStore");
-                    return (List<ResourceExample>?)existingValue!;
+                    return ((List<ResourceExample>?)existingValue!, stopwatch.ElapsedMilliseconds, stopwatch.ElapsedTicks);
                 }
 
                 cacheMissMessage = $"Thread {threadId}: Cache MISS Step forward - Loading resources from store";
-                Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cacheMissMessage}");
                 _logger?.Log(cacheMissMessage, LogLevelInternal.Information, "ThreadSafeCachedResourceStore", true);
 
                 var resources = await base.GetRandomResourcesAsync();
@@ -55,8 +54,8 @@ public class ThreadSafeCachedResourceStore : SimpleResourceStore, IDisposable
                     Priority = CacheItemPriority.Normal
                 };
 
-                _cache.Set(CACE_KEY, resources, cacheOptions);
-                cachedResources = resources;
+                _cache.Set(CACE_KEY, resources.result, cacheOptions);
+                cachedResources = resources.result;
             }
             finally
             {
@@ -64,16 +63,14 @@ public class ThreadSafeCachedResourceStore : SimpleResourceStore, IDisposable
             }
 
             var cachedMessage = $"Thread {threadId}: Resources cached for {_cacheExpiration.TotalMinutes} minutes";
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cachedMessage}");
             _logger?.Log(cachedMessage, LogLevelInternal.Information, "ThreadSafeCachedResourceStore");
         }
 
         var cacheHitMessage = $"Thread {threadId}: Cache HIT - Returning cached resources";
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {cacheHitMessage}");
         _logger?.Log(cacheHitMessage, LogLevelInternal.Information, "ThreadSafeCachedResourceStore");
 
         cachedResources.ForEach(p => _logger?.Log(p.ToString(), LogLevelInternal.Debug, nameof(CachedResourceStore)));
-        return cachedResources;
+        return (cachedResources, stopwatch.ElapsedMilliseconds, stopwatch.ElapsedTicks);
     }
 
     /// <summary>
@@ -84,17 +81,14 @@ public class ThreadSafeCachedResourceStore : SimpleResourceStore, IDisposable
         //Също важно
         _cache.Remove(CACE_KEY);
         var message = "Cache cleared";
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
         _logger?.Log(message, LogLevelInternal.Information, "ThreadSafeCachedResourceStore");
 
         foreach (var semaphore in _semaphoreDictionary.Values) semaphore.Dispose();
         message = "Semapgors disposed";
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
         _logger?.Log(message, LogLevelInternal.Debug, "ThreadSafeCachedResourceStore");
 
         _semaphoreDictionary.Clear();
         message = "Semapgors cleared";
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
         _logger?.Log(message, LogLevelInternal.Debug, "ThreadSafeCachedResourceStore");
     }
 
@@ -105,7 +99,7 @@ public class ThreadSafeCachedResourceStore : SimpleResourceStore, IDisposable
     {
         //Също важно
         _cache.Remove(CACE_KEY);
-        foreach (var semaphore in _semaphoreDictionary.Values)semaphore.Dispose();
+        foreach (var semaphore in _semaphoreDictionary.Values) semaphore.Dispose();
         _semaphoreDictionary.Clear();
         _cache.Dispose();
     }
