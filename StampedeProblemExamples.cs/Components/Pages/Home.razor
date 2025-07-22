@@ -1,0 +1,446 @@
+﻿@page "/"
+@using StampedeProblem
+@using StampedeProblemExamples.Services
+
+@inject StampedeService StampedeService
+@inject IRealTimeLogService LogService
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mb-2 mt-1">
+    <MudGrid>
+        <MudItem md="6">
+            <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">
+                🐃 Stampede Problem Demonstration
+            </MudText>
+        </MudItem>
+        <MudItem md="4">
+            <MudText Typo="Typo.body1" Align="Align.Left" Class="mt-2">
+                This demo shows the "Stampede" problem where multiple threads
+                compete for the same resources, potentially causing deadlocks or performance issues.
+            </MudText>
+        </MudItem>
+    </MudGrid>
+    <MudGrid>
+        <!-- Control Panel -->
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    🔧 Control Panel
+                </MudText>
+
+                <MudStack Spacing="3">
+                    <MudNumericField @bind-Value="concurrentTasks"
+                                     Label="Number of Concurrent Tasks"
+                                     Min="1" Max="10"
+                                     Variant="Variant.Outlined" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               Style="color:#1e1e1e"
+                               StartIcon="@(Icons.Material.Filled.PlayArrow)"
+                               FullWidth="true"
+                               Disabled="@isRunning"
+                               OnClick="RunNormalStampede">
+                        Run Normal
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Warning"
+                               Style="color:#1e1e1e"
+                               StartIcon="@(Icons.Material.Filled.Warning)"
+                               FullWidth="true"
+                               Disabled="@isRunning"
+                               OnClick="RunDeadlockStampede">
+                        Run Deadlock-Prone
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Style="background-color: deepskyblue; color:#1e1e1e"
+                               StartIcon="@(Icons.Material.Filled.Cached)"
+                               FullWidth="true"
+                               Disabled="@isRunning"
+                               OnClick="RunCachedStampede">
+                        Run Cached (non-thread safe)
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Style="background-color: dodgerblue; color:#1e1e1e"
+                               StartIcon="@(Icons.Material.Filled.Cached)"
+                               FullWidth="true"
+                               Disabled="@isRunning"
+                               OnClick="RunThreadSafeCachedStampede">
+                        Run Cached (thread safe)
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Info"
+                               StartIcon="@(Icons.Material.Filled.Refresh)"
+                               FullWidth="true"
+                               Disabled="@isRunning"
+                               OnClick="ClearResourceCache">
+                        Clear Cache (non-thread safe)
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Info"
+                               StartIcon="@(Icons.Material.Filled.Refresh)"
+                               FullWidth="true"
+                               Disabled="@isRunning"
+                               OnClick="ClearThreadSafeResourceCache">
+                        Clear Cache (thread safe)
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               StartIcon="@(Icons.Material.Filled.Clear)"
+                               FullWidth="true"
+                               OnClick="ClearLogs">
+                        Clear Logs
+                    </MudButton>
+                </MudStack>
+
+                @if (isRunning)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="mt-4">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                        <MudText Typo="Typo.body2">Tasks are running...</MudText>
+                    </MudStack>
+                }
+            </MudPaper>
+
+            <!-- Results Summary -->
+            <MudPaper Class="pa-4 mt-3" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-2">
+                    📊 Results Summary
+                </MudText>
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.body2">
+                        <strong>Total Tasks Run:</strong> @totalTasksRun
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        <strong>Successful:</strong>
+                        <MudText Typo="Typo.body2" Color="Color.Success" Style="display: inline">@successfulTasks</MudText>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        <strong>Failed:</strong>
+                        <MudText Typo="Typo.body2" Color="Color.Error" Style="display: inline">@failedTasks</MudText>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        <strong>Duration:</strong> @averageDuration ms
+                    </MudText>
+                    <MudDivider Class="my-2" />
+                    <MudText Typo="Typo.body2">
+                        <strong>Cache Status:</strong>
+                        <MudChip Size="Size.Small"
+                                 Color="@(isCacheActive ? Color.Success : Color.Default)"
+                                 Icon="@(isCacheActive ? Icons.Material.Filled.Check : Icons.Material.Filled.Clear)"
+                                 Style="margin-left: 8px;"
+                                 T="string">
+                            @(isCacheActive ? "Active" : "Empty")
+                        </MudChip>
+                        <strong>Thread Safe Cache Status:</strong>
+                        <MudChip Size="Size.Small"
+                                 Color="@(isThreadCacheActive ? Color.Success : Color.Default)"
+                                 Icon="@(isThreadCacheActive ? Icons.Material.Filled.Check : Icons.Material.Filled.Clear)"
+                                 Style="margin-left: 8px;"
+                                 T="string">
+                            @(isThreadCacheActive ? "Active" : "Empty")
+                        </MudChip>
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Real-time Log Console -->
+        <MudItem xs="12" md="8">
+            <MudPaper Class="pa-0" Elevation="2">
+                <MudToolBar>
+                    <MudText Typo="Typo.h6">💻 Real-time Log Console</MudText>
+                    <MudSpacer />
+                </MudToolBar>
+
+                <div class="log-container" style="height: 640px; overflow-y: auto; background-color: #1e1e1e; color: #ffffff; font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 12px;">
+                    @if (logEntries.Any())
+                    {
+                        @foreach (var log in logEntries.TakeLast(500).OrderByDescending(p => p.Timestamp))
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Style="@($"margin-left: 5px; {GetHighlight(log)}")" Spacing="2" Wrap="Wrap.NoWrap">
+                                <MudText Typo="Typo.caption" Style="color: #888; min-width: 90px;">
+                                    [@log.Timestamp.ToString("HH:mm:ss.fff")]
+                                </MudText>
+                                <MudChip Size="Size.Small"
+                                         Color="@GetLogChipColor(log.Level)"
+                                         Style="min-width: 45px; font-size: 10px;"
+                                         T="string">
+                                    @log.ThreadId
+                                </MudChip>
+                                <MudText Typo="Typo.caption" Style="color: #00bcd4; min-width: 120px;">
+                                    [@log.Source]
+                                </MudText>
+                                <MudText Typo="Typo.body2" Style="@($"flex: 1; {GetLogTextColor(log.Level)}")">
+                                    @log.Message
+                                </MudText>
+                            </MudStack>
+                        }
+                    }
+                    else
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                            <MudIcon Icon="Icons.Material.Filled.Info" Size="Size.Large" Style="color: #666;" />
+                            <MudText Typo="Typo.body2" Style="color: #888;">
+                                No logs yet. Run a stampede to see real-time activity.
+                            </MudText>
+                        </MudStack>
+                    }
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+
+
+
+    private int concurrentTasks = 3;
+    private bool isRunning = false;
+    private bool autoScroll = true;
+    private bool isCacheActive = false;
+
+    private bool isThreadCacheActive = true;
+    private List<LogEntry> logEntries = new();
+
+    // Statistics
+    private int totalTasksRun = 0;
+    private int successfulTasks = 0;
+    private int failedTasks = 0;
+    private string averageDuration = "0";
+
+    protected override void OnInitialized() => LogService.LogEntryAdded += OnLogEntryAdded;
+
+    protected static string GetHighlight(LogEntry logEntry) => logEntry.HighLighted ? "border-bottom-color: #ff5a00; border-bottom-width: 2px;" : "";
+
+    private void OnLogEntryAdded(LogEntry logEntry)
+    {
+        logEntries.Add(logEntry);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RunNormalStampede()
+    {
+        isRunning = true;
+        LogService.Log($"🚀 Starting Normal Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Information, "Demo Controller");
+
+        var tasks = new List<Task>();
+        var startTime = DateTime.Now;
+
+        for (int i = 0; i < concurrentTasks; i++)
+        {
+            tasks.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await StampedeService.GetResourcesNormalAsync();
+                    Interlocked.Increment(ref successfulTasks);
+                }
+                catch
+                {
+                    Interlocked.Increment(ref failedTasks);
+                }
+                finally
+                {
+                    Interlocked.Increment(ref totalTasksRun);
+                }
+            }));
+        }
+
+        await Task.WhenAll(tasks);
+        var duration = (DateTime.Now - startTime).TotalMilliseconds;
+        averageDuration = $"{duration:F0}";
+
+        LogService.Log($"✅ Normal Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
+        isRunning = false;
+    }
+
+    private async Task RunCachedStampede()
+    {
+        isRunning = true;
+        LogService.Log($"🚀 Starting Cached Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Information, "Demo Controller");
+
+        var tasks = new List<Task>();
+        var startTime = DateTime.Now;
+
+        for (int i = 0; i < concurrentTasks; i++)
+        {
+            tasks.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await StampedeService.GetResourcesCachedAsync();
+                    Interlocked.Increment(ref successfulTasks);
+                }
+                catch
+                {
+                    Interlocked.Increment(ref failedTasks);
+                }
+                finally
+                {
+                    Interlocked.Increment(ref totalTasksRun);
+                }
+            }));
+        }
+
+        await Task.WhenAll(tasks);
+        var duration = (DateTime.Now - startTime).TotalMilliseconds;
+        averageDuration = $"{duration:F0}";
+
+        LogService.Log($"✅ Cached Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
+        isRunning = false;
+        isCacheActive = true;
+    }
+
+
+    private async Task RunThreadSafeCachedStampede()
+    {
+        isRunning = true;
+        LogService.Log($"🚀 Starting Cached Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Information, "Demo Controller");
+
+        var tasks = new List<Task>();
+        var startTime = DateTime.Now;
+
+        for (int i = 0; i < concurrentTasks; i++)
+        {
+            tasks.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await StampedeService.GetThreadSafeResourcesCachedAsync();
+                    Interlocked.Increment(ref successfulTasks);
+                }
+                catch
+                {
+                    Interlocked.Increment(ref failedTasks);
+                }
+                finally
+                {
+                    Interlocked.Increment(ref totalTasksRun);
+                }
+            }));
+        }
+
+        await Task.WhenAll(tasks);
+        var duration = (DateTime.Now - startTime).TotalMilliseconds;
+        averageDuration = $"{duration:F0}";
+
+        LogService.Log($"✅ Cached Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
+        isRunning = false;
+        isThreadCacheActive = true;
+    }
+
+    private void ClearResourceCache()
+    {
+        StampedeService.ClearCache();
+        isCacheActive = false;
+        LogService.Log("🗑️ Resource cache manually cleared", LogLevelInternal.Information, "Demo Controller");
+    }
+
+    private void ClearThreadSafeResourceCache()
+    {
+        StampedeService.ClearThreadSafeCache();
+        isThreadCacheActive = false;
+        LogService.Log("🗑️ Thread Safe Resource cache manually cleared", LogLevelInternal.Information, "Demo Controller");
+    }
+
+    private async Task RunDeadlockStampede()
+    {
+        isRunning = true;
+        LogService.Log($"⚠️ Starting Deadlock-Prone Stampede with {concurrentTasks} concurrent tasks", LogLevelInternal.Warning, "Demo Controller");
+
+        var tasks = new List<Task>();
+        var startTime = DateTime.Now;
+
+        for (int i = 0; i < concurrentTasks; i++)
+        {
+            tasks.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    await StampedeService.GetResourcesWithDeadlockRiskAsync();
+                    Interlocked.Increment(ref successfulTasks);
+                }
+                catch
+                {
+                    Interlocked.Increment(ref failedTasks);
+                }
+                finally
+                {
+                    Interlocked.Increment(ref totalTasksRun);
+                }
+            }));
+        }
+
+        try
+        {
+            await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(30));
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            averageDuration = $"{duration:F0}";
+            LogService.Log($"✅ Deadlock-Prone Stampede completed in {duration:F0}ms", LogLevelInternal.Information, "Demo Controller");
+        }
+        catch (TimeoutException)
+        {
+            LogService.Log($"🔒 Deadlock-Prone Stampede timed out after 30s - likely deadlocked!", LogLevelInternal.Error, "Demo Controller");
+            Interlocked.Increment(ref failedTasks);
+        }
+
+        isRunning = false;
+    }
+
+    private void ClearLogs()
+    {
+        logEntries.Clear();
+        totalTasksRun = 0;
+        successfulTasks = 0;
+        failedTasks = 0;
+        averageDuration = "0";
+        LogService.Clear();
+    }
+
+    private string GetLogCssClass(LogLevelInternal level) => level switch
+    {
+        LogLevelInternal.Error => "text-danger",
+        LogLevelInternal.Warning => "text-warning",
+        LogLevelInternal.Information => "text-light",
+        LogLevelInternal.Debug => "text-muted",
+        _ => "text-light"
+    };
+
+    private string GetLogBadgeClass(LogLevelInternal level) => level switch
+    {
+        LogLevelInternal.Error => "bg-danger",
+        LogLevelInternal.Warning => "bg-warning",
+        LogLevelInternal.Information => "bg-info",
+        LogLevelInternal.Debug => "bg-secondary",
+        _ => "bg-primary"
+    };
+
+    private Color GetLogChipColor(LogLevelInternal level) => level switch
+    {
+        LogLevelInternal.Error => Color.Error,
+        LogLevelInternal.Warning => Color.Warning,
+        LogLevelInternal.Information => Color.Info,
+        LogLevelInternal.Debug => Color.Default,
+        _ => Color.Primary
+    };
+
+    private string GetLogTextColor(LogLevelInternal level) => level switch
+    {
+        LogLevelInternal.Error => "color: #f44336;",
+        LogLevelInternal.Warning => "color: #ff9800;",
+        LogLevelInternal.Information => "color: #ffffff;",
+        LogLevelInternal.Debug => "color: #9e9e9e;",
+        _ => "color: #ffffff;"
+    };
+
+    public void Dispose() => LogService.LogEntryAdded -= OnLogEntryAdded;
+}
