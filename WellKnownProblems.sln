@@ -1,11 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StampedeProblem", "StampedeProblem\StampedeProblem.csproj", "{A5C30534-7C92-4158-90E0-14FD5A432197}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StampedeProblemExamples", "StampedeProblemExamples\StampedeProblemExamples.csproj", "{18B427CD-9F58-491D-BA63-4EE53525CF66}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{542991CA-AE2B-4D94-BB5C-A669B219CCA6}"
+	ProjectSection(SolutionItems) = preProject
+		docs\stampede-problem.md = docs\stampede-problem.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
